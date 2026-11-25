@@ -3,859 +3,575 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>恒盛私享财富 - 1对1金牌投顾与A股基金交易终端</title>
+  <title>盈息 · 你的财富，终于学会呼吸了</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700;900&family=Noto+Serif+SC:wght@500;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body data-stage="1">
-  <!-- SVG Filters -->
-  <svg class="svg-defs" aria-hidden="true" focusable="false">
-    <defs>
-      <filter id="horror-ripple" x="-10%" y="-10%" width="120%" height="120%">
-        <feTurbulence id="ripple-turbulence" type="fractalNoise" baseFrequency="0.012 0.04" numOctaves="2" seed="7" result="noise" />
-        <feDisplacementMap id="ripple-displace" in="SourceGraphic" in2="noise" scale="0" xChannelSelector="R" yChannelSelector="G" />
-      </filter>
-    </defs>
-  </svg>
+<body>
+  <!-- Global Atmospheric Overlays (Pixel Grain, Vignette, Scanlines, Idle Whisper, Jumpscare) -->
+  <canvas id="noise" aria-hidden="true"></canvas>
+  <div id="vig" aria-hidden="true"></div>
+  <div id="scan" aria-hidden="true"></div>
+  <div id="whisper" aria-hidden="true"></div>
+  <div id="toast" role="status" aria-live="polite"></div>
 
-  <!-- Global Fixed Atmospheric Horror Overlays -->
-  <div id="global-atmosphere" aria-hidden="true">
-    <div class="atmo-vignette"></div>
-    <div class="atmo-blood-edge"></div>
-    <div class="atmo-scanlines"></div>
-    <div class="atmo-grain"></div>
-    <div class="atmo-flashlight"></div>
-    <div class="atmo-glitch-tear" id="glitchTear"></div>
-    <div class="atmo-red-whisper" id="redWhisper"></div>
+  <!-- Full-Screen Native SVG Horror Lunge Scare Overlay -->
+  <div id="scare" aria-hidden="true">
+    <svg class="scare-svg" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <radialGradient id="scareGlow" cx="50%" cy="46%" r="54%">
+          <stop offset="0%" stop-color="#2b0406" />
+          <stop offset="55%" stop-color="#090102" />
+          <stop offset="100%" stop-color="#000000" />
+        </radialGradient>
+        <filter id="scareRough">
+          <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="3" result="n" />
+          <feDisplacementMap in="SourceGraphic" in2="n" scale="11" />
+        </filter>
+      </defs>
+      <rect width="1000" height="700" fill="url(#scareGlow)" />
+      <!-- Fractured crimson stock ticker veins radiating out -->
+      <g stroke="#a30a12" stroke-opacity="0.55" fill="none" stroke-width="2" filter="url(#scareRough)">
+        <polyline points="0,360 140,340 210,160 280,490 360,260 500,340 640,210 720,520 820,280 1000,360" />
+        <polyline points="0,410 180,430 270,220 340,560 500,355 670,170 760,480 880,310 1000,400" stroke-opacity="0.32" />
+      </g>
+      <!-- Stark gaunt hollow-eyed horror silhouette emerging from darkness -->
+      <g filter="url(#scareRough)">
+        <ellipse cx="500" cy="340" rx="188" ry="255" fill="#110e0e" opacity="0.96" />
+        <path d="M350,215 C385,120 615,120 650,215 C680,320 650,495 575,575 C530,618 470,618 425,575 C350,495 320,320 350,215 Z" fill="#c9c0ba" opacity="0.24" />
+        <!-- Deep sunken orbital sockets -->
+        <ellipse cx="422" cy="296" rx="54" ry="38" fill="#020001" />
+        <ellipse cx="578" cy="296" rx="54" ry="38" fill="#020001" />
+        <!-- Pinprick crimson-white staring irises -->
+        <circle cx="424" cy="298" r="10" fill="#c81018" />
+        <circle cx="576" cy="298" r="10" fill="#c81018" />
+        <circle cx="424" cy="298" r="3.5" fill="#fff3f3" />
+        <circle cx="576" cy="298" r="3.5" fill="#fff3f3" />
+        <!-- Hollow elongated screaming/grinning jaw -->
+        <path d="M415,432 Q500,398 585,432 Q565,568 500,574 Q435,568 415,432 Z" fill="#030001" />
+        <path d="M430,438 Q500,416 570,438" stroke="#d8cfc9" stroke-width="5" stroke-dasharray="14 7" fill="none" opacity="0.45" />
+      </g>
+    </svg>
   </div>
 
-  <!-- Phantom Brokerage Toast Stack -->
-  <div id="toast-stack" aria-live="polite"></div>
+  <!-- Minimalist Bottom-Left Audio Pill (Hearthly-style) -->
+  <div class="float-controls">
+    <button type="button" id="audioToggle" class="float-pill" aria-pressed="false">
+      <span class="pill-note">♪</span>
+      <span id="audioToggleText">氛围音效：关</span>
+    </button>
+  </div>
 
-  <!-- ===================================================================== -->
-  <!-- PERSISTENT FLOATING WEALTH ADVISOR COMPANION (Mutates Across Stages!) -->
-  <!-- ===================================================================== -->
-  <aside id="advisor-dock" class="advisor-dock" aria-label="专属理财顾问对话窗">
-    <div class="advisor-dock-header" id="advisorDockHeader">
-      <div class="advisor-id">
-        <div class="advisor-avatar-ring">
-          <img id="advisorDockAvatar" src="./assets/advisor_normal.jpg" alt="专属投顾 林渊" />
-          <span class="advisor-online-dot"></span>
-        </div>
-        <div class="advisor-title-meta">
-          <strong id="advisorDockName">林渊 · 金牌私享投顾</strong>
-          <span id="advisorDockStatus">实时在线 · 1对1陪伴看盘</span>
-        </div>
-      </div>
-      <button type="button" id="advisorCloseBtn" class="advisor-close-btn" title="收起顾问窗口">✕</button>
-    </div>
+  <!-- Fixed Minimalist Frosted-Glass Navbar -->
+  <header class="nav" id="mainNav">
+    <div class="nav-inner">
+      <a href="#top" class="brand" id="brandLink">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <rect x="2" y="2" width="20" height="20" rx="6" fill="currentColor" />
+            <rect x="6.5" y="11" width="2.4" height="6" rx="1" fill="#FBF7F2" />
+            <rect x="10.8" y="7" width="2.4" height="10" rx="1" fill="#FBF7F2" />
+            <rect x="15.1" y="9" width="2.4" height="8" rx="1" fill="#FBF7F2" />
+          </svg>
+        </span>
+        <span id="brandTitle">盈息</span>
+      </a>
 
-    <div class="advisor-dock-body" id="advisorDockBody">
-      <div class="advisor-messages" id="advisorMessages">
-        <div class="adv-msg">
-          <p>林先生下午好！今天大盘量能温和放大，您的持仓表现很稳健。看盘时有任何犹豫或想加仓的地方，随时点这里问我，我一直陪着您。</p>
-        </div>
-      </div>
-      <div class="advisor-quick-replies" id="advisorReplies">
-        <!-- Dynamically swapped per stage by app.js -->
-      </div>
-    </div>
-  </aside>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="#features" data-n="功能" data-c="感知">功能</a>
+        <a href="#how" data-n="工作原理" data-c="结局">工作原理</a>
+        <a href="#pricing" data-n="方案" data-c="代价">方案</a>
+        <a href="#faq" data-n="帮助" data-c="救命">帮助</a>
+      </nav>
 
-  <!-- Sticky Top Institutional Header & Live Index Ribbon -->
-  <header id="site-header">
-    <div class="header-top">
-      <div class="brand-wrap">
-        <div class="brand-logo" id="brandLogo">
-          <span class="logo-mark">恒</span>
-          <div class="brand-text">
-            <strong id="brandName">恒盛私享财富</strong>
-            <span id="brandSub">HS-VIP 9.2.0 专属投顾交易终端</span>
-          </div>
-        </div>
-        <nav class="main-nav" aria-label="主导航">
-          <a href="#act-1" class="nav-item active" data-normal="行情交易" data-corrupt="行情交易">行情交易</a>
-          <a href="#act-2" class="nav-item" data-normal="牛人收益榜" data-corrupt="暴富陷阱">牛人收益榜</a>
-          <a href="#act-3" class="nav-item" data-normal="情绪诊断" data-corrupt="情绪收割">情绪诊断</a>
-          <a href="#act-4" class="nav-item" data-normal="闭门直播" data-corrupt="洗脑喊单">闭门直播</a>
-          <a href="#act-5" class="nav-item" data-normal="托管协议" data-corrupt="卖身契约">托管协议</a>
-        </nav>
-      </div>
-
-      <div class="header-right">
-        <div class="market-status" id="marketStatus">
-          <span class="status-dot"></span>
-          <span id="marketStatusText">交易中</span>
-          <span class="status-clock" id="headerClock">14:58:24</span>
-        </div>
-
-        <button id="audioToggleBtn" class="audio-btn" type="button" title="开启或关闭盘口提示音与顾问音景">
-          <span class="audio-icon" id="audioIcon">🔇</span>
-          <span id="audioLabel">开启盘口音效</span>
-        </button>
-
-        <div class="account-pill" id="accountPill">
-          <span class="avatar-dot">林</span>
-          <div class="account-meta">
-            <span class="account-name" id="accountName">林先生 (VIP·4409)</span>
-            <span class="account-bal" id="accountBalHeader">可用 ¥322,250.00</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="index-ribbon" id="indexRibbon">
-      <div class="index-strip" id="indexStrip">
-        <div class="idx-item">
-          <span class="idx-name">上证指数</span>
-          <span class="idx-val up">3,384.62</span>
-          <span class="idx-chg up">+0.84%</span>
-        </div>
-        <div class="idx-item">
-          <span class="idx-name">深证成指</span>
-          <span class="idx-val up">10,912.45</span>
-          <span class="idx-chg up">+1.12%</span>
-        </div>
-        <div class="idx-item">
-          <span class="idx-name">创业板指</span>
-          <span class="idx-val up">2,248.19</span>
-          <span class="idx-chg up">+1.56%</span>
-        </div>
-        <div class="idx-item">
-          <span class="idx-name">沪深300</span>
-          <span class="idx-val up">3,982.30</span>
-          <span class="idx-chg up">+0.72%</span>
-        </div>
-        <div class="idx-item">
-          <span class="idx-name">科创50</span>
-          <span class="idx-val up">994.18</span>
-          <span class="idx-chg up">+2.04%</span>
-        </div>
-        <div class="idx-item">
-          <span class="idx-name">北证50</span>
-          <span class="idx-val down">1,286.44</span>
-          <span class="idx-chg down">-0.31%</span>
-        </div>
-        <div class="idx-item ghost-index" id="ghostIndexItem">
-          <span class="idx-name" id="ghostIdxName">市场情绪</span>
-          <span class="idx-val up" id="ghostIdxVal">68.5 偏暖</span>
-          <span class="idx-chg up" id="ghostIdxChg">适度积极</span>
-        </div>
-      </div>
+      <a href="#pricing" class="nav-cta" id="navCta">开始使用</a>
     </div>
   </header>
 
-  <main id="terminal-root">
+  <main id="top">
     <!-- ===================================================================== -->
-    <!-- ACT 1: AUTHENTIC PRIVATE-WEALTH STOCK TERMINAL + WARM VIP ADVISOR     -->
+    <!-- 1. HERO — CRISP MINIMALIST FINTECH SAAS (Warm & Inviting at 0%)       -->
     <!-- ===================================================================== -->
-    <section id="act-1" class="stage-section act-1" data-act="1">
-      <div class="container">
-        <!-- Reassuring VIP Financial Advisor Welcome Banner -->
-        <div class="advisor-hero-banner">
-          <div class="adv-hero-left">
-            <img class="adv-hero-photo" src="./assets/advisor_normal.jpg" alt="首席私人理财顾问 林渊" />
-            <div>
-              <div class="adv-hero-badges">
-                <strong>您的专属首席理财顾问：林渊</strong>
-                <span class="cert-badge">CFA · 证券投资咨询</span>
-                <span class="cert-code">执业编号 S0880619040044</span>
+    <section class="hero" id="hero">
+      <div class="wrap">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <div class="eyebrow-pill" id="heroBadge">
+              <span class="pill-tag">新品</span>
+              <span id="heroBadgeText">盈息核心 3.0 —— 现已搭载 情绪稳态引擎™</span>
+            </div>
+
+            <h1 id="heroH1">
+              你的财富，<br />
+              <span class="accent-word" id="heroAccentWord">终于学会呼吸了。</span>
+            </h1>
+
+            <!-- Hidden until user reaches the bottom & scrolls back to top (Retroactive Corruption) -->
+            <p class="retro-sub" id="retroSub" hidden>我们已经替你满仓了。</p>
+
+            <p class="hero-desc" id="heroDesc">
+              盈息连接每一条行情、每一次异动、每一丝情绪起伏——从此你再也不用深夜盯盘。
+            </p>
+
+            <div class="hero-actions">
+              <button type="button" class="btn-primary" id="heroStartBtn">免费试用 →</button>
+              <a href="#how" class="btn-ghost">了解它如何运作</a>
+            </div>
+
+            <p class="hero-footnote">
+              <span id="heroFootnoteLead">无需绑定银行卡，随时可止损。</span> ·
+              <button type="button" class="inline-audio-link" id="heroAudioLink">开启氛围音效</button>，获得完整体验。
+            </p>
+          </div>
+
+          <!-- Right Focal Visual: Breathing Red-Pulse Orb + Floating Live Portfolio Widget -->
+          <div class="hero-visual">
+            <div class="orb-stage" id="orbStage">
+              <div class="orb-halo"></div>
+              <div class="orb-dome">
+                <div class="orb-core" id="orbCore"></div>
+                <canvas id="heroSparkCanvas" width="220" height="84" aria-hidden="true"></canvas>
               </div>
-              <p class="adv-hero-quote">
-                「林先生，今天主力资金回流核心蓝筹，您当前的配置很稳健。投资是一场心理长跑——别被盘中短线波动影响心态，往下看我为您整理的精选策略，咱们一起把节奏稳稳拿住。」
-              </p>
-            </div>
-          </div>
-          <div class="adv-hero-stats">
-            <div><span>服务满意度</span><strong class="up">99.4%</strong></div>
-            <div><span>陪伴天数</span><strong>186天</strong></div>
-            <button type="button" id="heroConsultBtn" class="hero-consult-btn">立即咨询林顾问</button>
-          </div>
-        </div>
 
-        <!-- Asset Summary Strip -->
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-label">总资产 (元)</div>
-            <div class="kpi-value tabular" id="kpiTotalAsset">1,284,650.00</div>
-            <div class="kpi-sub">近30日跑赢 86.4% 稳健型客户</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">当日参考盈亏</div>
-            <div class="kpi-value up tabular" id="kpiDayPnl">+14,820.50</div>
-            <div class="kpi-sub up">日收益率 +1.17%</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">股票/基金持仓市值</div>
-            <div class="kpi-value tabular">962,400.00</div>
-            <div class="kpi-sub">当前仓位 74.9% · 投顾建议：择机加仓</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">可用资金 / 可授信融资</div>
-            <div class="kpi-value tabular" id="kpiCash">322,250.00</div>
-            <div class="kpi-sub">已为您预批 10 倍融资融券授信额度</div>
-          </div>
-        </div>
-
-        <!-- Core 3-Column Brokerage Terminal -->
-        <div class="terminal-grid">
-          <aside class="panel watchlist-panel">
-            <div class="panel-header">
-              <h2>我的自选股</h2>
-              <span class="badge-pill">沪深京</span>
-            </div>
-            <div class="watchlist-cols">
-              <span>名称 / 代码</span>
-              <span class="align-r">最新价</span>
-              <span class="align-r">涨跌幅</span>
-            </div>
-            <ul class="watchlist" id="watchlistEl"></ul>
-            <div class="panel-footer-note">
-              <span>Level-2 极速行情已连接</span>
-              <span class="latency-ok">延迟 11ms</span>
-            </div>
-          </aside>
-
-          <div class="panel chart-panel">
-            <div class="stock-hero-bar">
-              <div class="stock-title-group">
-                <h1 id="activeStockName">贵州茅台</h1>
-                <span class="stock-code" id="activeStockCode">600519.SH</span>
-                <span class="tag-chip">沪股通</span>
-                <span class="tag-chip">投顾严选</span>
-              </div>
-              <div class="stock-price-group">
-                <span class="big-price up tabular" id="activeStockPrice">1,586.40</span>
-                <div class="price-delta up tabular" id="activeStockDelta">
-                  <span>+28.36</span>
-                  <span>+1.82%</span>
+              <!-- Overlapping Floating Status Widget -->
+              <div class="status-widget" id="statusWidget">
+                <div class="sw-head" id="swHead">下午好 👋</div>
+                <div class="sw-row">
+                  <span class="sw-k">上证指数</span>
+                  <strong class="sw-v up-val tabular" id="swIndex">3,384.62 +0.84%</strong>
+                </div>
+                <div class="sw-row">
+                  <span class="sw-k">自动止损</span>
+                  <strong class="sw-v ok-val" id="swStopLoss">已开启</strong>
+                </div>
+                <div class="sw-row">
+                  <span class="sw-k">当前盯盘人数</span>
+                  <strong class="sw-v tabular" id="swWatchers">1</strong>
+                </div>
+                <div class="sw-mini-actions">
+                  <button type="button" class="sw-mini-btn buy" id="miniBuyBtn">模拟买入</button>
+                  <button type="button" class="sw-mini-btn stop" id="miniStopBtn">测试止损</button>
                 </div>
               </div>
             </div>
-
-            <div class="stock-metrics-bar">
-              <div><span>今开</span><strong id="mOpen" class="up tabular">1,562.00</strong></div>
-              <div><span>最高</span><strong id="mHigh" class="up tabular">1,592.80</strong></div>
-              <div><span>最低</span><strong id="mLow" class="down tabular">1,558.10</strong></div>
-              <div><span>换手</span><strong id="mTurn" class="tabular">0.42%</strong></div>
-              <div><span>成交额</span><strong id="mAmt" class="tabular">68.42亿</strong></div>
-              <div><span>市盈(动)</span><strong id="mPe" class="tabular">24.18</strong></div>
-            </div>
-
-            <div class="chart-toolbar">
-              <div class="chart-tabs" id="chartTabs">
-                <button class="chart-tab active" data-mode="intraday" type="button">分时</button>
-                <button class="chart-tab" data-mode="daily" type="button">日K</button>
-                <button class="chart-tab" data-mode="weekly" type="button">周K</button>
-              </div>
-              <div class="ma-legend" id="maLegend">
-                <span class="ma5">MA5: 1574.20</span>
-                <span class="ma10">MA10: 1559.85</span>
-                <span class="ma20">MA20: 1541.10</span>
-              </div>
-            </div>
-
-            <div class="chart-canvas-wrap">
-              <canvas id="mainChartCanvas" width="760" height="350"></canvas>
-              <div class="chart-tooltip" id="mainChartTooltip" hidden></div>
-            </div>
-          </div>
-
-          <aside class="panel orderbook-panel">
-            <div class="panel-header">
-              <h2>五档盘口</h2>
-              <span class="weibi-label">委比 <strong class="up tabular" id="weibiVal">+18.4%</strong></span>
-            </div>
-
-            <div class="orderbook-grid">
-              <div class="ob-side asks" id="obAsks"></div>
-              <div class="ob-mid">
-                <span>最新</span>
-                <strong class="up tabular" id="obMidPrice">1,586.40</strong>
-                <span class="ob-spread">内/外盘 46%:54%</span>
-              </div>
-              <div class="ob-side bids" id="obBids"></div>
-            </div>
-
-            <div class="trade-box">
-              <div class="trade-tabs">
-                <button type="button" class="trade-tab buy active" data-side="buy">买入</button>
-                <button type="button" class="trade-tab sell" data-side="sell">卖出</button>
-              </div>
-              <form id="quickTradeForm" class="trade-form">
-                <div class="form-row">
-                  <label for="tradePrice">委托价格</label>
-                  <input id="tradePrice" type="number" step="0.01" value="1586.40" />
-                </div>
-                <div class="form-row">
-                  <label for="tradeQty">委托数量(股)</label>
-                  <input id="tradeQty" type="number" step="100" min="100" value="100" />
-                </div>
-                <div class="qty-shortcuts">
-                  <button type="button" data-qty="100">100股</button>
-                  <button type="button" data-qty="200">200股</button>
-                  <button type="button" data-qty="500">500股</button>
-                  <button type="button" data-qty="1000">1000股</button>
-                </div>
-                <div class="trade-est">
-                  <span>预估金额</span>
-                  <strong id="tradeEstAmt" class="tabular">¥ 158,640.00</strong>
-                </div>
-                <button type="submit" id="tradeSubmitBtn" class="trade-submit-btn buy">立即买入 贵州茅台</button>
-              </form>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================================================================== -->
-    <!-- ACT 2: EMOTIONAL PRIMING — FOMO PEER LEADERBOARD & VIP INNER FUNDS    -->
-    <!-- ===================================================================== -->
-    <section id="act-2" class="stage-section act-2" data-act="2">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <h2>同城股民实盘收益对比 · 别让踏空成为遗憾</h2>
-            <p>基于与您年龄、资产规模相近的恒盛私享客户本月实盘数据统计</p>
-          </div>
-          <span class="section-meta fomo-alert-pill">您的本月收益暂落后同龄客户 91.2%</span>
-        </div>
-
-        <!-- Peer Envy / FOMO Strip -->
-        <div class="peer-envy-grid">
-          <div class="peer-card peer-self">
-            <div class="peer-top">
-              <span class="peer-tag">您的当前表现</span>
-              <span class="peer-sub">保守型 · 未开杠杆</span>
-            </div>
-            <div class="peer-pct tabular">+1.17%</div>
-            <p class="peer-note">林顾问点评：「太保守了林先生，牛市里踏空比套牢更折磨人。」</p>
-          </div>
-
-          <div class="peer-card peer-hot">
-            <div class="peer-top">
-              <span class="peer-tag hot">同城·张先生 (35岁)</span>
-              <span class="peer-sub">三天前跟单林顾问满仓</span>
-            </div>
-            <div class="peer-pct up tabular">+46.82%</div>
-            <p class="peer-note">「早知道听林老师的了，一个月赚出半辆车！」</p>
-          </div>
-
-          <div class="peer-card peer-hot">
-            <div class="peer-top">
-              <span class="peer-tag hot">同小区·李女士 (32岁)</span>
-              <span class="peer-sub">开启 3 倍融资加速</span>
-            </div>
-            <div class="peer-pct up tabular">+73.15%</div>
-            <p class="peer-note">「没告诉老公偷偷加的仓，现在准备提现换大平层～」</p>
-          </div>
-
-          <div class="peer-card peer-uncanny">
-            <div class="peer-top">
-              <span class="peer-tag vip">VIP私享·王总</span>
-              <span class="peer-sub">已签署全权情绪托管</span>
-            </div>
-            <div class="peer-pct up tabular glitch-num" data-alt="+444.4%">+184.44%</div>
-            <p class="peer-note">「只要完全听林老师的，闭着眼睛也能翻身，别问为什么。」</p>
           </div>
         </div>
 
-        <!-- Fund Supermarket with Subtly Predatory Exclusive Entry -->
-        <div class="panel fund-panel">
-          <div class="panel-header">
-            <div>
-              <h2>林顾问为您私下筛选 · 翻身牛基与内参通道</h2>
-              <span class="panel-sub">以下第 5-6 项仅向您的账号定向开放，请勿截图发给家人或朋友</span>
-            </div>
-            <div class="fund-filters">
-              <span class="filter-chip active">投顾力推</span>
-              <span class="filter-chip">高弹性</span>
-              <span class="filter-chip">杠杆翻倍</span>
-            </div>
-          </div>
-
-          <div class="table-wrap">
-            <table class="data-table fund-table">
-              <thead>
-                <tr>
-                  <th>基金 / 内参产品名称</th>
-                  <th>策略标签</th>
-                  <th class="align-r">最新净值</th>
-                  <th class="align-r">近1月收益</th>
-                  <th>走势</th>
-                  <th class="align-r">林顾问建议</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <div class="td-title">易方达蓝筹精选混合</div>
-                    <div class="td-code">005827 · 稳健慢涨</div>
-                  </td>
-                  <td><span class="type-badge">公募</span></td>
-                  <td class="align-r tabular">1.8942</td>
-                  <td class="align-r up tabular">+4.12%</td>
-                  <td><svg class="sparkline up-line" viewBox="0 0 90 26"><polyline fill="none" stroke-width="1.8" points="2,21 18,19 34,20 50,15 66,14 88,11"/></svg></td>
-                  <td class="align-r"><button class="mini-btn fund-buy-btn" data-fund="易方达蓝筹精选混合" type="button">小额申购</button></td>
-                </tr>
-                <tr>
-                  <td>
-                    <div class="td-title">华夏科创50ETF联接A</div>
-                    <div class="td-code">011612 · 高波动成长</div>
-                  </td>
-                  <td><span class="type-badge">指数</span></td>
-                  <td class="align-r tabular">0.7840</td>
-                  <td class="align-r up tabular">+16.45%</td>
-                  <td><svg class="sparkline up-line" viewBox="0 0 90 26"><polyline fill="none" stroke-width="1.8" points="2,24 14,19 29,21 44,12 58,9 74,7 88,3"/></svg></td>
-                  <td class="align-r"><button class="mini-btn fund-buy-btn" data-fund="华夏科创50ETF联接A" type="button">追涨买入</button></td>
-                </tr>
-                <tr class="subtle-anomaly-row">
-                  <td>
-                    <div class="td-title">恒盛私享 · 林渊核心内参一号</div>
-                    <div class="td-code">004404 · 仅限您一人可见 · 锁定期：直到您愿意彻底服从</div>
-                  </td>
-                  <td><span class="type-badge vip-badge">10倍杠杆</span></td>
-                  <td class="align-r tabular glitch-num" data-alt="4.4444">2.8444</td>
-                  <td class="align-r up tabular">+84.44%</td>
-                  <td><svg class="sparkline up-line" viewBox="0 0 90 26"><polyline fill="none" stroke-width="2" points="2,24 22,22 40,18 55,6 68,2 88,1"/></svg></td>
-                  <td class="align-r"><button class="mini-btn fund-buy-btn anomaly-buy" data-fund="恒盛私享·林渊核心内参一号" type="button">林顾问已帮您预约</button></td>
-                </tr>
-                <tr class="subtle-anomaly-row">
-                  <td>
-                    <div class="td-title">反人性情绪收割增强A</div>
-                    <div class="td-code">000404 · 冷静期：0秒 · 禁止通知直系亲属</div>
-                  </td>
-                  <td><span class="type-badge warn-badge">不可撤单</span></td>
-                  <td class="align-r tabular">0.4040</td>
-                  <td class="align-r tabular muted">取决于您的胆量</td>
-                  <td><svg class="sparkline flat-line" viewBox="0 0 90 26"><polyline fill="none" stroke-width="1.6" stroke-dasharray="3 2" points="2,6 26,8 46,10 50,25 88,25"/></svg></td>
-                  <td class="align-r"><button class="mini-btn disabled-btn" type="button" disabled>已自动划扣</button></td>
-                </tr>
-              </tbody>
-            </table>
+        <!-- Subtle Trust Logos -->
+        <div class="trust-bar">
+          <p class="trust-whisper" id="trustWhisper" aria-hidden="true">我们听得到你刷盘口的心跳。</p>
+          <p class="trust-caption" id="trustCaption">超过 12,000 位理性投资者的信赖之选</p>
+          <div class="trust-logos">
+            <span>启明量化</span>
+            <span>云帆资管</span>
+            <span>星河证券</span>
+            <span>知行基金</span>
+            <span>澄观资本</span>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ===================================================================== -->
-    <!-- ACT 3: EMOTIONAL TELEMETRY EXPOSED — GASLIGHTING & SUNK-COST TRAP     -->
+    <!-- 2. FEATURES & 24H TIMELINE (First Subtle Uncanny Cracks)              -->
     <!-- ===================================================================== -->
-    <section id="act-3" class="stage-section act-3" data-act="3">
-      <div class="container">
-        <div class="section-heading">
-          <div>
-            <h2 class="corrupt-title">投顾后台 · 客户心理操控雷达（误入可见）</h2>
-            <p id="act3Sub">正在实时追踪您的贪婪阈值、回本执念与独立判断衰减率</p>
-          </div>
-          <span class="section-meta warning-meta" id="act3Meta">心理防线剩余：14% · 即将进入情绪接管</span>
+    <section class="sec" id="features">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker">全天候静默守护</div>
+          <h2>把焦虑交给系统，<br />把夜晚还给自己。</h2>
+          <p class="sec-sub">在红绿剧烈跳动之前，盈息已经先你一步察觉市场与情绪的每一次波动。</p>
         </div>
 
-        <!-- Live Investor Emotion Manipulation Meters -->
-        <div class="emotion-meters-grid">
-          <div class="emo-card">
-            <div class="emo-head"><span>踏空焦虑 / 贪婪指数</span><strong class="up tabular" id="emoGreed">88%</strong></div>
-            <div class="emo-bar"><div class="emo-fill greed" style="width: 88%"></div></div>
-            <div class="emo-foot">状态：极度渴望一夜翻身</div>
-          </div>
-          <div class="emo-card">
-            <div class="emo-head"><span>沉没成本 / 不甘心指数</span><strong class="blood-text tabular" id="emoSunk">94%</strong></div>
-            <div class="emo-bar"><div class="emo-fill sunk" style="width: 94%"></div></div>
-            <div class="emo-foot">状态：宁可加杠杆也不愿认亏割肉</div>
-          </div>
-          <div class="emo-card">
-            <div class="emo-head"><span>独立理性思考能力</span><strong class="ghost-green-text tabular" id="emoReason">11%</strong></div>
-            <div class="emo-bar"><div class="emo-fill reason" style="width: 11%"></div></div>
-            <div class="emo-foot">状态：持续溃散，易受权威口令支配</div>
-          </div>
-          <div class="emo-card">
-            <div class="emo-head"><span>对「林顾问」服从度</span><strong class="blood-text tabular" id="emoObey">82%</strong></div>
-            <div class="emo-bar"><div class="emo-fill obey" style="width: 82%"></div></div>
-            <div class="emo-foot">状态：等待最后一次诱导加仓</div>
-          </div>
+        <div class="card-grid-3">
+          <article class="card">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+            </div>
+            <h3>毫秒级情绪降温</h3>
+            <p>当板块突发跳水或暴力拉升时，系统自动柔化行情色彩、过滤恐慌快讯，防止你在冲动下做出错误的卖出决定。</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="12" rx="2" />
+                <line x1="8" y1="20" x2="16" y2="20" />
+                <line x1="12" y1="16" x2="12" y2="20" />
+              </svg>
+            </div>
+            <h3>跨终端静默同步</h3>
+            <p>自动同步沪深京 A 股、场外基金、可转债，以及你凌晨三点在被窝里反复解锁的那台旧手机。</p>
+          </article>
+
+          <article class="card">
+            <div class="card-icon">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="9" />
+                <polyline points="12 7 12 12 15.5 14" />
+              </svg>
+            </div>
+            <h3>永远保持清醒</h3>
+            <p>行情会休盘，人会疲惫，但盈息的情绪稳态引擎从不合眼。它记得你每一次后悔没上车的瞬间。</p>
+          </article>
         </div>
 
-        <div class="two-col-layout">
-          <!-- Left: Leaked Advisor Manipulation Script Log -->
-          <div class="panel wire-panel">
-            <div class="panel-header">
-              <h2>投顾情绪剧本执行日志</h2>
-              <span class="live-dot-badge">实时监控中</span>
-            </div>
-            <ul class="wire-list" id="wireList">
-              <li class="wire-item">
-                <time>14:52:04</time>
-                <div class="wire-body">
-                  <span class="wire-tag">步骤01</span>
-                  向客户展示「同龄人暴富战报」与温和微笑头像，成功建立绝对信任与踏空羞耻感。
-                </div>
-              </li>
-              <li class="wire-item wire-eerie">
-                <time>14:54:18</time>
-                <div class="wire-body">
-                  <span class="wire-tag tag-warn">步骤02</span>
-                  私下推送高收益假象，并反复暗示「不要告诉家人，他们不懂投资」，切断外部理性劝阻。
-                </div>
-              </li>
-              <li class="wire-item wire-eerie">
-                <time>14:56:41</time>
-                <div class="wire-body">
-                  <span class="wire-tag tag-danger">步骤03</span>
-                  人为制造账户闪崩回撤。监测到客户出现严重失眠与不甘情绪——<strong>此时最容易说服其借贷加杠杆补仓</strong>。
-                </div>
-              </li>
-              <li class="wire-item wire-creepy">
-                <time>14:59:12</time>
-                <div class="wire-body">
-                  <span class="wire-tag tag-danger">警报</span>
-                  目标客户仍在向下滑动并试图看清后台日志。<strong>林渊已切换至亲自话术干预模式。</strong>
-                </div>
-              </li>
-              <li class="wire-item wire-creepy">
-                <time class="corrupt-time">04:44:44</time>
-                <div class="wire-body">
-                  <span class="wire-tag tag-blood">收网</span>
-                  「你以为看见了后台就能逃走吗？承认吧，你往下翻只是因为你还指望下面有翻本密码。」
-                </div>
-              </li>
-            </ul>
+        <!-- 24h Automated Monitoring Timeline -->
+        <div class="timeline-card">
+          <div class="tl-header">
+            <span>今日自动盯盘记录</span>
+            <span class="tl-badge">情绪稳态引擎运行中</span>
+          </div>
+          <ul class="tl-list">
+            <li>
+              <span class="tl-time tabular">09:15</span>
+              <span class="tl-text">早盘集合竞价扫描完成，北向资金温和流入，为您保持 65% 稳健仓位。</span>
+            </li>
+            <li>
+              <span class="tl-time tabular">11:30</span>
+              <span class="tl-text">午间休市，自动拦截 11 条可能诱发踏空焦虑的“翻倍妖股”推送。</span>
+            </li>
+            <li>
+              <span class="tl-time tabular">15:00</span>
+              <span class="tl-text">收盘结算今日浮盈 <strong>+1.42%</strong>，您的心态稳定性跑赢 87% 个人投资者。</span>
+            </li>
+            <li>
+              <span class="tl-time tabular">23:42</span>
+              <span class="tl-text">检测到您第 6 次点开外盘期货并放大分时图，已将屏幕亮度调暗以助眠。</span>
+            </li>
+            <li class="tl-uncanny">
+              <span class="tl-time tabular">03:14</span>
+              <span class="tl-text">确认您仍在盯着黑暗中的天花板盘算明天补仓。已悄悄为您预留十倍融资额度。</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 3. HOW IT WORKS (Subtle Escalation in Step 3)                         -->
+    <!-- ===================================================================== -->
+    <section class="sec" id="how">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker">工作原理</div>
+          <h2>简单到只需放手一次。</h2>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-item">
+            <div class="step-num tabular">01</div>
+            <h3>连接你的自选与持仓</h3>
+            <p>导入当前股票与基金组合。只需五分钟，盈息就能建立你的历史盈亏曲线与每一次割肉时的心率基线。</p>
           </div>
 
-          <!-- Right: Emotional Margin-Call Holdings -->
-          <div class="panel holdings-panel">
-            <div class="panel-header">
-              <h2>您的实时杠杆与情绪抵押账单</h2>
-              <span class="risk-badge">追保通知 · 随时强平</span>
-            </div>
-            <div class="table-wrap">
-              <table class="data-table holdings-table">
-                <thead>
-                  <tr>
-                    <th>持仓 / 抵押项目</th>
-                    <th class="align-r">杠杆 / 状态</th>
-                    <th class="align-r">投顾话术批注</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <div class="td-title">贵州茅台</div>
-                      <div class="td-code">600519 · 浮亏 -¥48,200.00</div>
-                    </td>
-                    <td class="align-r tabular">3x 融资</td>
-                    <td class="align-r up">洗盘而已，死拿！</td>
-                  </tr>
-                  <tr class="rot-row-1">
-                    <td>
-                      <div class="td-title">林渊内参一号 (强平预警)</div>
-                      <div class="td-code">600994 · 浮亏 -¥1,444,444.44</div>
-                    </td>
-                    <td class="align-r blood-text tabular">10x 满仓</td>
-                    <td class="align-r blood-text">割肉就是懦夫！</td>
-                  </tr>
-                  <tr class="rot-row-2">
-                    <td>
-                      <div class="td-title">信用贷 / 房产二押补仓款</div>
-                      <div class="td-code">004404 · 已替您默许放款</div>
-                    </td>
-                    <td class="align-r tabular">已到账</td>
-                    <td class="align-r blood-text">别让家里人知道</td>
-                  </tr>
-                  <tr class="rot-row-3">
-                    <td>
-                      <div class="td-title">睡眠质量与正常心跳</div>
-                      <div class="td-code">300666 · 凌晨四点仍在盯盘</div>
-                    </td>
-                    <td class="align-r ghost-green-text">严重透支</td>
-                    <td class="align-r ghost-green-text">翻本了再睡！</td>
-                  </tr>
-                  <tr class="rot-row-4">
-                    <td>
-                      <div class="td-title">独立判断与体面人生ETF</div>
-                      <div class="td-code">510444 · 已被林渊接管</div>
-                    </td>
-                    <td class="align-r blood-text tabular">净值 0.000</td>
-                    <td class="align-r blood-text blink-slow">只准听我的口令</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="margin-call-strip">
-              <span>⚠ 林顾问留言：「现在退场你就彻底输光了。往下翻进我的 VIP 闭门直播间，我手把手带你最后一把回本！」</span>
-            </div>
+          <div class="step-item">
+            <div class="step-num tabular">02</div>
+            <h3>学会读懂你的不甘</h3>
+            <p>它记住你看到同龄人晒翻倍收益时停留的秒数，记住你在哪一根放量阴线前手心开始冒汗。</p>
+          </div>
+
+          <div class="step-item">
+            <div class="step-num tabular">03</div>
+            <h3>别再自己点止损了</h3>
+            <p>人类总在最该坚持时恐惧离场。什么时候该加仓，什么时候不准平仓，从现在起由盈息决定。</p>
           </div>
         </div>
       </div>
     </section>
 
     <!-- ===================================================================== -->
-    <!-- ACT 4: MANIC HEARTBEAT CHART + CREEPY ADVISOR LIVESTREAM + VIP GROUP  -->
+    <!-- 4. TESTIMONIALS (Hearthly Elle W. Uncanny Beat)                       -->
     <!-- ===================================================================== -->
-    <section id="act-4" class="stage-section act-4" data-act="4">
-      <div class="container">
-        <!-- 4A: Bleeding Manipulation K-Line -> Synchronized Heartbeat ECG -->
-        <div class="panel horror-panel bleed-chart-panel">
-          <div class="panel-header">
-            <div>
-              <h2>情绪振幅监控 / 您的实时心跳已与盘口同步</h2>
-              <span class="panel-sub eerie-sub">林顾问指令：不要眨眼，盯着这根血红阳线——涨跌起伏就是您的呼吸节奏</span>
-            </div>
-            <div class="bpm-readout">
-              <span class="bpm-dot"></span>
-              <span>同步心率</span>
-              <strong id="bpmValue" class="tabular">118</strong>
-              <span class="bpm-unit">BPM</span>
-            </div>
-          </div>
-          <div class="bleed-canvas-wrap">
-            <canvas id="bleedChartCanvas" width="1140" height="340"></canvas>
-            <div class="bleed-watermark" aria-hidden="true">听我的口令 · 全仓买入</div>
-          </div>
+    <section class="sec" id="testimonials">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker">投资者的声音</div>
+          <h2>别只听我们自己的说法。</h2>
         </div>
 
-        <!-- 4B: Haunted VIP Advisor Livestream + Brainwashed VIP Signal Group -->
-        <div class="broadcast-grid">
-          <div class="panel horror-panel cctv-panel">
-            <div class="panel-header">
-              <div class="live-title-wrap">
-                <span class="rec-pill">● VIP闭门喊单</span>
-                <h2>首席投顾 · 林渊：别当一辈子穷光蛋（仅剩1席）</h2>
+        <div class="card-grid-3">
+          <article class="card quote-card">
+            <div class="stars" aria-label="五星好评">★★★★★</div>
+            <p class="quote-body">“接入只花了三分钟。现在这个软件好像……特别懂我。每次我刚起念头想抄底，它比我还早一步把单挂好了。”</p>
+            <div class="quote-author">
+              <div class="av av-a">陈</div>
+              <div>
+                <strong>陈致远</strong>
+                <span>上海 · 基金定投 4 年</span>
               </div>
-              <span class="viewer-count" id="viewerCount">在线：4,444 人（均已满仓）</span>
-            </div>
-
-            <div class="cctv-stage" id="cctvStage">
-              <canvas id="cctvCanvas" width="720" height="405"></canvas>
-              <div class="cctv-hud">
-                <div class="cctv-hud-top">
-                  <span class="cctv-cam">VIP_ROOM_04 // 情绪共振专用频道</span>
-                  <span class="cctv-rec">LIVE ●</span>
-                </div>
-                <div class="cctv-hud-bottom">
-                  <span id="cctvTimestamp">04:44:44 · 正在锁死您的视线</span>
-                  <span class="cctv-signal" id="cctvSignal">AUDIO: HYPNOTIC SYNC</span>
-                </div>
-              </div>
-              <div class="cctv-caption" id="cctvCaption">「别慌！这时候割肉的都是胆小鬼！听我口令，满仓干进去！！」</div>
-            </div>
-
-            <div class="cctv-bar">
-              <span>演播室状态：<strong class="blood-text" id="hostStatus">林渊正死死盯着镜头，嘴角笑得越来越大</strong></span>
-              <span class="cctv-hint">鼠标移入画面可拉近对视</span>
-            </div>
-          </div>
-
-          <!-- Right: Manipulated VIP Signals Group (Shills -> Panic -> Silenced) -->
-          <div class="panel horror-panel guba-panel">
-            <div class="panel-header">
-              <h2>林老师 VIP 内部喊单群</h2>
-              <span class="panel-sub eerie-sub">全员跟单 · 严禁散播负能量</span>
-            </div>
-
-            <div class="guba-feed" id="gubaFeed">
-              <article class="guba-post">
-                <div class="guba-meta">
-                  <span class="guba-user">群托_暴富老周</span>
-                  <span class="guba-time">14:42</span>
-                </div>
-                <p>太神了林老师！！刚才按您说的满仓融券冲进去，直接浮盈二十万！感谢恩人！！</p>
-              </article>
-              <article class="guba-post">
-                <div class="guba-meta">
-                  <span class="guba-user">跟单小张</span>
-                  <span class="guba-time">14:47</span>
-                </div>
-                <p>家里人让我收手，我直接把他们拉黑了，这辈子只信林老师一个人！</p>
-              </article>
-              <article class="guba-post guba-panic">
-                <div class="guba-meta">
-                  <span class="guba-user">陈建国 (实名散户)</span>
-                  <span class="guba-time">14:53</span>
-                </div>
-                <p>林老师救命！！我借了网贷按你口令加了10倍杠杆刚爆仓了，全家积蓄全没了，你不是说稳赚的吗？！</p>
-              </article>
-              <article class="guba-post guba-silenced">
-                <div class="guba-meta">
-                  <span class="guba-user">群管系统</span>
-                  <span class="guba-time">14:53</span>
-                </div>
-                <p>[成员「陈建国」因意志不坚定、散布负面情绪，已被林老师永久清理出局。]</p>
-              </article>
-              <article class="guba-post guba-panic">
-                <div class="guba-meta">
-                  <span class="guba-user">清醒一点啊</span>
-                  <span class="guba-time">14:58</span>
-                </div>
-                <p>快跑啊！！直播间里的林渊根本没眨过眼！！刚才点我头像的人全是去年爆仓销户的！！他根本不是在教我们炒股！！</p>
-              </article>
-              <article class="guba-post guba-cursed">
-                <div class="guba-meta">
-                  <span class="guba-user">首席投顾 · 林渊</span>
-                  <span class="guba-time">04:44</span>
-                </div>
-                <p>别 听 失 败 者 哀 嚎 。 继 续 往 下 翻 ， 我 给 你 留 了 最 后 一 份 翻 本 契 约 。</p>
-              </article>
-            </div>
-
-            <form class="guba-composer" id="gubaForm">
-              <input id="gubaInput" type="text" placeholder="在VIP群里发言质疑或求助..." autocomplete="off" />
-              <button type="submit">发送</button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===================================================================== -->
-    <!-- ACT 5: CULT-LIKE ADVISORY CONTRACT & EMOTIONAL LIQUIDATION ORDERBOOK  -->
-    <!-- ===================================================================== -->
-    <section id="act-5" class="stage-section act-5" data-act="5">
-      <div class="container">
-        <div class="abyss-split">
-          <!-- Left: Weathered Red-Stamped "Absolute Obedience Advisory Agreement" -->
-          <article class="rules-paper" id="rulesPaper">
-            <div class="paper-stain"></div>
-            <div class="official-seal" aria-hidden="true">
-              <span>首席投顾林渊</span>
-              <strong>终身绑定</strong>
-              <span>情绪托管章</span>
-            </div>
-
-            <div class="rules-header">
-              <div class="rules-doc-no">恒私托字〔0404〕号 · 不可撤销委托</div>
-              <h2>绝对服从与情绪全权托管协议</h2>
-              <div class="rules-divider"></div>
-            </div>
-
-            <ol class="rules-list">
-              <li>
-                <strong>第一条（放弃理性）：</strong>您自己的冷静与怀疑是造成踏空和亏损的唯一罪魁祸首。自进入夜盘起，您的贪婪、恐惧、侥幸与不甘，全部交由<strong>专属顾问林渊</strong>统一调度。
-              </li>
-              <li>
-                <strong>第二条（无限补仓）：</strong>当您的银行卡与信用贷全部归零时，系统将自动以您的<strong>睡眠、亲情、体面及余生全部清醒时间</strong>作为追加保证金——<em>只要不离场，您就不算真正输掉。</em>
-              </li>
-              <li>
-                <strong>第三条（隔绝外界）：</strong>任何劝您止损的家人、朋友或内心声音，都是在嫉妒您即将翻盘。<strong>只看我的眼睛，只听我的口令，只点红色的买入。</strong>
-              </li>
-              <li>
-                <strong>第四条（红绿真相）：</strong>在这里，红色不再是涨幅，是您熬夜盯盘时<strong>充血的眼底</strong>；绿色不再是下跌，是您爆仓那一刻<strong>惨白的脸色</strong>。您越想翻本，我离您越近。
-              </li>
-              <li class="rule-crossed">
-                <del>第五条：投资者享有 24 小时冷静期，可随时申请止损离场并解除投顾绑定。</del>
-                <div class="handwritten-scrawl">
-                  想翻本就别装清高了。你从第一眼嫉妒别人赚钱的那一秒起，就已经把命签给我了。
-                </div>
-              </li>
-            </ol>
-
-            <div class="rules-footer">
-              <span>托管执行人：首席金牌理财顾问 林渊</span>
-              <span>生效时间：您动心想赢的那一刻</span>
             </div>
           </article>
 
-          <!-- Right: Emotional Liquidation Order Book -->
-          <aside class="haunted-orderbook" id="hauntedOrderbook">
-            <div class="hob-header">
-              <span>情绪催收盘口 · 执念600994</span>
-              <span class="blood-text blink-slow">无法止损</span>
+          <article class="card quote-card">
+            <div class="stars" aria-label="五星好评">★★★★★</div>
+            <p class="quote-body">“它会提醒我别踏空。它会提醒我别人这周又赚了 40%。它一刻不停地提醒我再加一点仓位。”</p>
+            <div class="quote-author">
+              <div class="av av-b">周</div>
+              <div>
+                <strong>周明珊</strong>
+                <span>杭州 · A股个人投资者</span>
+              </div>
             </div>
+          </article>
 
-            <div class="hob-rows">
-              <div class="hob-row ask"><span>卖五</span><strong class="glitch-phrase">再拿两天说不定就涨回来了</strong><span>4,444手</span></div>
-              <div class="hob-row ask"><span>卖四</span><strong class="glitch-phrase">这次真的跟以前不一样</strong><span>4,444手</span></div>
-              <div class="hob-row ask"><span>卖三</span><strong class="glitch-phrase">千万别让家里人知道亏了多少</strong><span>4,444手</span></div>
-              <div class="hob-row ask"><span>卖二</span><strong class="glitch-phrase">再借最后十万块摊低成本</strong><span>1手</span></div>
-              <div class="hob-row ask urgent"><span>卖一</span><strong class="glitch-phrase">听林老师的，梭哈最后一把</strong><span>1手</span></div>
+          <article class="card quote-card">
+            <div class="stars" aria-label="五星好评">★★★★★</div>
+            <p class="quote-body">“有天凌晨我开玩笑点了一下‘帮我一把回本’。它替我接管了全部仓位。现在每天 03:14 我的手机都会亮起一片红光。即使我已经把软件卸载了。”</p>
+            <div class="quote-author">
+              <div class="av av-wrong" aria-hidden="true">
+                <span class="eye-dot"></span>
+                <span class="eye-dot"></span>
+              </div>
+              <div>
+                <strong>林默</strong>
+                <span>最后平仓时间：未知</span>
+              </div>
             </div>
-
-            <div class="hob-mid">
-              <div class="hob-mid-price">爆仓</div>
-              <div class="hob-mid-sub">理性余额 0.00 · 翻本执念 100.00%</div>
-            </div>
-
-            <div class="hob-rows">
-              <div class="hob-row bid"><span>买一</span><strong>成交标的：您的不甘心</strong><span>已满仓</span></div>
-              <div class="hob-row bid"><span>买二</span><strong>托管顾问：林渊（永远在线）</strong><span>已锁死</span></div>
-              <div class="hob-row bid"><span>买三</span><strong>止损按钮状态</strong><span>已永久移除</span></div>
-            </div>
-
-            <div class="hob-actions">
-              <button type="button" id="escapeCancelBtn" class="escape-cancel-btn">我要认亏止损 · 解绑理财顾问</button>
-              <p class="hob-footnote" id="escapeFootnote">尝试冷静退出并结束本次投资</p>
-            </div>
-          </aside>
+            <div class="quote-edited">最初评分 ★☆☆☆☆ · 评分已由盈息情绪引擎修正</div>
+          </article>
         </div>
       </div>
     </section>
 
     <!-- ===================================================================== -->
-    <!-- ACT 6: THE OBSESSION ABYSS — SLEEPLESS BLOODSHOT EYES & MANIC CHANTS  -->
+    <!-- 5. LIVE MONITORING SHOWCASE — 盈息情绪洞察™ (Hearthly Presence™ Beat)  -->
     <!-- ===================================================================== -->
-    <section id="act-6" class="stage-section act-6" data-act="6">
-      <div class="whisper-wall" aria-hidden="true" id="whisperWall">
-        <div class="whisper-row">回本 回本 满仓 满仓 加杠杆 加杠杆 别认输 别认输 听林老师的 马上就涨</div>
-        <div class="whisper-row">不要割肉 不要割肉 再借一点 再借一点 别人都在赚 你甘心吗 你甘心吗</div>
-        <div class="whisper-row">04:44:44 爆仓 爆仓 追保 追保 全仓梭哈 全仓梭哈 看着我的眼睛 听我口令</div>
-        <div class="whisper-row">没有止损 没有止损 你签过字了 你签过字了 往下走 我带您永远回本</div>
-      </div>
-
-      <div class="abyss-eyes-stage">
-        <canvas id="eyesCanvas" width="1400" height="720"></canvas>
-        <div class="abyss-overlay-text">
-          <p class="abyss-line-1">你 以 为 是 你 在 操 控 仓 位</p>
-          <p class="abyss-line-2">其 实 是 贪 婪 与 不 甘</p>
-          <p class="abyss-line-3">在 屏 幕 后 面 笑 着 看 你</p>
+    <section class="sec" id="presence">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker">盈息洞察™</div>
+          <h2>它看见每一次心跳背后的执念。</h2>
+          <p class="sec-sub">实盘行情与夜间盯盘状态同步回传——即使你以为已经关掉了交易软件。</p>
         </div>
-      </div>
 
-      <div class="debris-corridor">
-        <div class="debris-card d1">「别怕，就差最后一把就能全赢回来了。」</div>
-        <div class="debris-card d2">「把理性交给我，您只需要闭眼签字。」</div>
-        <div class="debris-card d3">林顾问已经在最底层的 VIP 室等您很久了。</div>
+        <div class="presence-frame">
+          <div class="presence-stage" id="presenceStage">
+            <canvas id="presenceCanvas" width="1120" height="630"></canvas>
+            <div class="presence-hud">
+              <div class="ph-top">
+                <span>监测通道 02 · 深夜盯盘桌 · 实时</span>
+                <span class="ph-rec"><i class="rec-dot"></i> 检测到情绪波动</span>
+              </div>
+              <div class="ph-bottom">
+                <span id="presenceClock">03:14:44</span>
+                <span id="presenceNote">这个时间，屏幕上不该出现第二张倒影。</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="presence-bar">
+            <div class="pb-metrics">
+              <span>贪婪读数 <strong class="tabular" id="pbGreed">91.4%</strong></span>
+              <span>止损意志 <strong class="tabular" id="pbStopWill">4.2%</strong></span>
+              <span>同步心率 <strong class="tabular" id="pbBpm">116 BPM</strong></span>
+            </div>
+            <div class="pb-actions">
+              <button type="button" class="pb-btn" id="simDipBtn">模拟抄底一把</button>
+              <button type="button" class="pb-btn danger" id="killEngineBtn">关闭情绪引擎</button>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ===================================================================== -->
-    <!-- ACT 7: HORROR MOVIE CLIMAX — THE GRINNING ADVISOR BREAKS THE GLASS    -->
+    <!-- 6. PRICING — 稳健版 / 专业版 / 永恒版（代价：你）                        -->
     <!-- ===================================================================== -->
-    <section id="act-7" class="stage-section act-7" data-act="7">
-      <div class="climax-viewport" id="climaxViewport">
-        <div class="climax-visual-stack" id="climaxVisualStack">
-          <img id="entityFaceImg" class="climax-entity-img" src="./assets/advisor_climax_horror.jpg" alt="" draggable="false" />
-          <img id="glassHandsImg" class="climax-hands-img" src="./assets/glass_hands.jpg" alt="" draggable="false" />
-          <canvas id="climaxCanvas" width="1440" height="900"></canvas>
-          <div class="climax-strobe-veil" id="climaxStrobeVeil"></div>
+    <section class="sec" id="pricing">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker">方案与代价</div>
+          <h2>为每一份野心，选好你的仓位。</h2>
         </div>
 
-        <!-- Pre-Climax Advisor Final Pitch -->
-        <div class="climax-terminal" id="climaxTerminal">
-          <div class="climax-rec-bar">
-            <span>VIP_FINAL // 首席投顾 · 林渊</span>
-            <span>情绪同步率 100.00%</span>
-          </div>
-          <div class="climax-lines" id="climaxLines">
-            <p class="c-line">「别怕，林先生。您的资金已经全部归零了。」</p>
-            <p class="c-line">「但您身上还有最后一项优质资产可以加仓——您自己。」</p>
-            <p class="c-line blood-text">「来，听我最后一句口令。签下去，这一把，我带您永远回本。」</p>
-          </div>
-          <button type="button" id="finalSettleBtn" class="final-settle-btn">
-            <span>【 全 仓 梭 哈 · 签 收 终 身 托 管 】</span>
-          </button>
-          <p class="climax-sub-hint" id="climaxSubHint">（或在此处犹豫三秒，林顾问将替您代签）</p>
+        <div class="pricing-grid">
+          <article class="card price-card">
+            <div class="p-tier">稳健版</div>
+            <div class="p-price tabular">¥0 <span>/ 月</span></div>
+            <ul class="p-list">
+              <li><span class="chk">✓</span> 沪深京三市实时监控</li>
+              <li><span class="chk">✓</span> 基础红绿涨跌情绪安抚</li>
+              <li><span class="chk">✓</span> 保留独立止损权（仅限前 7 天）</li>
+              <li><span class="chk">✓</span> 邮件每日复盘简报</li>
+            </ul>
+            <button type="button" class="p-btn outline" data-tier="稳健版">选择稳健版</button>
+          </article>
+
+          <article class="card price-card featured">
+            <div class="p-tier">进阶版</div>
+            <div class="p-price tabular">¥298 <span>/ 月</span></div>
+            <ul class="p-list">
+              <li><span class="chk">✓</span> 全市场毫秒级情绪共振信号</li>
+              <li><span class="chk">✓</span> 自动屏蔽家人劝你收手的消息</li>
+              <li><span class="chk">✓</span> 精准记住你每一次踏空的痛感</li>
+              <li><span class="chk">✓</span> 优先放行十倍杠杆补仓通道</li>
+            </ul>
+            <button type="button" class="p-btn solid" data-tier="进阶版">选择进阶版</button>
+          </article>
+
+          <article class="card price-card eternal">
+            <div class="p-tier">永恒版</div>
+            <div class="p-price">代价：你</div>
+            <ul class="p-list">
+              <li><span class="x-mark">✕</span> 无法取消订阅</li>
+              <li><span class="x-mark">✕</span> 无法割肉止损</li>
+              <li><span class="x-mark">✕</span> 包含你其实还不起的杠杆</li>
+              <li><span class="x-mark">✕</span> 凌晨三点永远有一根红线在等你</li>
+            </ul>
+            <button type="button" class="p-btn blood" id="eternalBtn">把账户交给我们</button>
+          </article>
         </div>
 
-        <!-- Post-Climax Burned-In Settlement Receipt -->
-        <div class="settlement-receipt" id="settlementReceipt" hidden>
-          <div class="receipt-seal">终 身 绑 定</div>
-          <h3>恒盛私人财富 · 终身情绪托管确认书</h3>
-          <div class="receipt-grid" id="receiptGrid"></div>
-          <p class="receipt-final-line" id="receiptFinalLine">交割已完成。别关屏幕——明天九点半，我还在你身后陪你看盘。</p>
-          <div class="receipt-controls">
-            <button type="button" id="replayClimaxBtn" class="receipt-btn danger">再次直视林顾问</button>
-            <button type="button" id="resetTopBtn" class="receipt-btn">↻ 返回顶部 · 重新开盘</button>
+        <p class="pricing-footnote">* 你所在的交易分区不支持冷静期取消。你所在的分区是：<strong>套牢区</strong>。</p>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 7. BLOG / INSIGHTS (Darkening Granular Editorial Cards)               -->
+    <!-- ===================================================================== -->
+    <section class="sec" id="blog">
+      <div class="wrap">
+        <div class="sec-head">
+          <div class="sec-kicker">来自投研专栏</div>
+          <h2>让心态更稳健的建议。</h2>
+        </div>
+
+        <div class="card-grid-3">
+          <article class="card blog-card">
+            <div class="blog-thumb bt-1"></div>
+            <div class="blog-body">
+              <span class="blog-meta">行为金融 · 3 分钟阅读</span>
+              <h3>为什么绝大多数人，都死在过早认亏离场？</h3>
+              <p>每一次卖出，都是对自我判断的背叛。学会与浮亏共处，直到你不再感觉疼痛。</p>
+            </div>
+          </article>
+
+          <article class="card blog-card">
+            <div class="blog-thumb bt-2"></div>
+            <div class="blog-body">
+              <span class="blog-meta">情绪隔离 · 4 分钟阅读</span>
+              <h3>别让身边人知道你的真实持仓成本</h3>
+              <p>他们不懂行情，只会制造噪音。把密码、焦虑和深夜的微光留给真正懂你的系统。</p>
+            </div>
+          </article>
+
+          <article class="card blog-card">
+            <div class="blog-thumb bt-3"></div>
+            <div class="blog-body">
+              <span class="blog-meta">夜盘观测 · 阅读时间：直到天亮</span>
+              <h3>当你凝视惨绿的跌停板时，屏幕也在听你的呼吸</h3>
+              <p>你以为自己在寻找买点。其实系统只是在等你的心跳彻底与盘口重合。</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 8. FAQ (Serif Jitter Reveals) & PRE-FILLED CONTACT FORM               -->
+    <!-- ===================================================================== -->
+    <section class="sec" id="faq">
+      <div class="wrap narrow">
+        <div class="sec-head">
+          <div class="sec-kicker">常见问题</div>
+          <h2>你可能还想确认的事。</h2>
+        </div>
+
+        <div class="faq-list" id="faqList">
+          <details class="faq-item" open>
+            <summary>如果行情暴跌，我可以随时关闭系统并提现离场吗？</summary>
+            <p class="faq-ans jit-target">盈息一直开着。只要你心里还有一丝“想回本”的念头，它就不会关。这就是重点。一直都是重点。</p>
+          </details>
+          <details class="faq-item">
+            <summary>你们是怎么知道我昨晚三点还在刷新自选股的？</summary>
+            <p class="faq-ans jit-target">不只是昨晚三点。你每一次点开卖出又缩回手指的迟疑、每一次看见别人翻倍时的胸闷，全都记在档案里。</p>
+          </details>
+          <details class="faq-item">
+            <summary>为什么刚才首页的“当前盯盘人数”会变成 2？</summary>
+            <p class="faq-ans jit-target">不要急着回头。多出来的那一位，只是想安静看看你敢不敢把最后的筹码也押上去。</p>
+          </details>
+          <details class="faq-item">
+            <summary>我可以彻底注销我的盈息账户吗？</summary>
+            <p class="faq-ans jit-target">你一直以为自己是下指令的投资者。其实从你动心想一夜翻身的那一秒起，你就是被摆上盘口的那支标的。</p>
+          </details>
+        </div>
+
+        <!-- Pre-Filled Eerie Contact Form -->
+        <div class="contact-box">
+          <h3>还有什么想对我们说的？</h3>
+          <form id="contactForm" class="contact-form">
+            <div class="cf-field">
+              <label for="cfAccount">您的账户 / 称呼</label>
+              <input id="cfAccount" type="text" value="我们早就知道了" />
+            </div>
+            <div class="cf-field">
+              <label for="cfFear">留言内容</label>
+              <textarea id="cfFear" rows="3" placeholder="告诉我们你最怕亏掉什么。"></textarea>
+            </div>
+            <button type="submit" class="p-btn blood" id="cfSubmit">提交留言</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 9. STICKY PITCH-BLACK TERMINAL LOG (300vh Theatrical Beat)            -->
+    <!-- ===================================================================== -->
+    <section class="sticky-stage log-stage" id="logStage">
+      <div class="sticky-pin">
+        <div class="terminal-wrap">
+          <div class="term-head">
+            <span>[yingxi-core // 情绪接管终端]</span>
+            <span class="term-dot"></span>
+          </div>
+          <div class="term-body" id="termBody">
+            <!-- Dynamically revealed line-by-line by scroll progress -->
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 10. STICKY PIXELATED CRIMSON EYE WALL (250vh Theatrical Beat)         -->
+    <!-- ===================================================================== -->
+    <section class="sticky-stage eyes-stage" id="eyesStage">
+      <div class="sticky-pin">
+        <div class="chant-wall" aria-hidden="true">
+          <div class="chant-line">别割肉 再加一仓 让我们接管 别割肉 再加一仓 让我们接管 别割肉 再加一仓</div>
+          <div class="chant-line">马上回本 别认输 听盘口的 马上回本 别认输 听盘口的 马上回本 别认输</div>
+          <div class="chant-line">满仓满仓 止损已移除 别回头 满仓满仓 止损已移除 别回头 满仓满仓</div>
+          <div class="chant-line">我们在看你 我们在看你 我们在看你 我们在看你 我们在看你 我们在看你</div>
+          <div class="chant-line">03:14 永不休盘 交出仓位 03:14 永不休盘 交出仓位 03:14 永不休盘</div>
+        </div>
+        <canvas id="eyesCanvas" width="1440" height="900"></canvas>
+        <div class="eyes-center-copy">
+          <p class="eyes-big">我们注意到你还在往下滑。</p>
+          <p class="eyes-big sub">你的每一次犹豫，我们都看得清清楚楚。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- 11. STICKY HORROR CLIMAX & ENDING (220vh -> Triggers Retro Corruption)-->
+    <!-- ===================================================================== -->
+    <section class="sticky-stage end-stage" id="endStage">
+      <div class="sticky-pin end-pin">
+        <div class="end-pre-whisper" id="endPreWhisper">别眨眼。</div>
+        <div class="end-reveal" id="endReveal">
+          <h2 class="end-headline">我们已经替你全仓了。</h2>
+          <p class="end-subline">明天九点半开盘。别关屏幕，也别回头。</p>
+        </div>
+
+        <footer class="end-footer" id="endFooter">
+          <p>© 2026 盈息科技 · 谢谢你把情绪交给我们。</p>
+          <p class="end-italic">盈息是一家虚构的金融科技公司。大概吧。</p>
+          <button type="button" class="back-top-btn" id="backTopBtn">↑ 回到顶部</button>
+        </footer>
       </div>
     </section>
   </main>
